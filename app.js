@@ -83,7 +83,14 @@ app.get(
 
     let browser;
     try {
-      browser = await puppeteer.launch({ headless: true });
+      browser = await puppeteer.launch({
+        executablePath: puppeteer.executablePath(),
+        headless: true,
+        args: [
+          "--no-sandbox",
+          "--disable-setuid-sandbox",
+        ],
+      });
 
       const page = await browser.newPage();
       await page.goto(targetUrl.href, { waitUntil: "networkidle2" });
