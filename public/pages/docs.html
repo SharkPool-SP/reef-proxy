@@ -1,0 +1,88 @@
+<!doctype html>
+<html>
+  <head></head>
+  <body>
+    <h1>Reef Proxy Documentation</h1>
+    <p>
+      <strong>Reef Proxy</strong> is a free CORS proxy that provides multiple
+      methods for fetching and scraping web resources. This page documents all
+      available endpoints and how to use them.
+    </p>
+    <h2>Support Reef Proxy</h2>
+    <p>
+      Reef Proxy is a free service. Running and maintaining the proxy requires
+      ongoing server costs. If you find it useful, please consider supporting us
+      with a donation.
+    </p>
+    <div>
+      <a
+        href="https://www.paypal.com/donate/?business=AGLGGVQWUBUFE&no_recurring=0&item_name=Help+pay+for+my+College+Education&currency_code=CAD"
+        target="_blank"
+      >
+        <img
+          width="25px"
+          src="https://www.paypalobjects.com/marketing/web/logos/paypal-mark-color.svg"
+        />
+        <span>Donate with PayPal</span>
+      </a>
+      <br /><br />
+      <a href="YOUR_GITHUB_LINK" target="_blank">
+        <img
+          width="25px"
+          src="https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg"
+        />
+        <span>Contact on GitHub</span>
+      </a>
+    </div>
+    <h3>🛈 Rate Limits and Privacy</h3>
+    <p>
+      Reef Proxy temporarily stores your IP address solely for rate limiting. IP
+      addresses are not permanently stored or shared. Each client is limited to
+      <strong>50 requests per hour</strong>.
+    </p>
+    <h2>Available Endpoints</h2>
+    <ul>
+      <li><code>/get</code> - Performs a GET request to the target URL.</li>
+      <li><code>/post</code> - Performs a POST request to the target URL.</li>
+      <li>
+        <code>/scrape</code> - Loads and returns the rendered HTML of a webpage.
+      </li>
+    </ul>
+    <h3>🛈 Specifying the Target URL</h3>
+    <p>
+      Every request must include the target URL using one of the following
+      methods:
+    </p>
+    <ul>
+      <li>Query parameter: <code>?url=https://example.com</code></li>
+      <li>Request header: <code>x-target-url: https://example.com</code></li>
+    </ul>
+    <h3>/get</h3>
+    <p>
+      Sends a standard HTTP <code>GET</code> request to the specified URL and
+      returns the response. Additional query parameters are forwarded to the
+      target URL.
+    </p>
+    <h3>/post</h3>
+    <p>
+      Sends an HTTP <code>POST</code> request to the specified URL. Request
+      headers and the request body are forwarded to the target whenever
+      possible.
+    </p>
+    <h3>/scrape</h3>
+    <p>
+      Opens the requested webpage in a browser and returns the rendered HTML
+      after waiting for the page to load.
+    </p>
+    <p>
+      Use the optional <code>wait</code> query parameter to specify how many
+      seconds to wait before the page is scraped.
+    </p>
+    <pre><code>/scrape?url=https://example.com&amp;wait=5</code></pre>
+    <p>
+      The <code>wait</code> value must be between <code>0</code> and
+      <code>10</code> seconds. If omitted, Reef Proxy uses the default wait
+      time.
+    </p>
+  </body>
+</html>
