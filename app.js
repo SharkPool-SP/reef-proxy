@@ -11,7 +11,6 @@ const {
   PROXY_OPTIONS,
   getTargetUrl,
   validateTargetUrl,
-  isValidObject,
 } = require("./private/proxy-utils.js");
 const RateLimiter = require("./private/rate-limiter.js");
 
