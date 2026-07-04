@@ -1,24 +1,16 @@
 const PROXY_OPTIONS = {
-  router: (req) => getTargetUrl(req).origin,
-  pathRewrite: (path, req) => {
-    const urlObj = getTargetUrl(req);
-
-    return urlObj.pathname + urlObj.search;
+  router: req => getTargetUrl(req).origin,
+  pathRewrite: (_, req) => {
+    const url = getTargetUrl(req);
+    return url.pathname + url.search;
   },
   changeOrigin: true,
   logLevel: "debug",
   on: {
-    proxyReq: (proxyReq, req, res) => {
+    proxyReq(proxyReq, req) {
       proxyReq.removeHeader("x-target-url");
-
-      if (req.body && Object.keys(req.body).length > 0) {
-        const bodyData = JSON.stringify(req.body);
-        proxyReq.setHeader("Content-Type", "application/json");
-        proxyReq.setHeader("Content-Length", Buffer.byteLength(bodyData));
-        proxyReq.write(bodyData);
-      }
-    },
-  },
+    }
+  }
 };
 
 /**
@@ -52,19 +44,8 @@ const validateTargetUrl = function (req, res, next) {
   next();
 };
 
-/**
- * Checks if an inputted value is an object.
- *
- * @param {*} value Value to be checked
- * @returns True if the passed argument is an object
- */
-const isValidObject = function (value) {
-  return value && typeof value == "object" && !Array.isArray(value);
-};
-
 module.exports = {
   PROXY_OPTIONS,
   getTargetUrl,
   validateTargetUrl,
-  isValidObject,
 };
