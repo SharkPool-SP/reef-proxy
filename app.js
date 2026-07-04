@@ -24,9 +24,9 @@ const proxyMiddleware = createProxyMiddleware(PROXY_OPTIONS);
 const app = express();
 
 /* Setup */
-app.use("/api", express.json());
+app.use("/get", express.json());
 app.use("/scrape", express.json());
-app.use("/api", express.urlencoded({ extended: false }));
+app.use("/get", express.urlencoded({ extended: false }));
 app.use("/scrape", express.urlencoded({ extended: false }));
 
 app.use((req, _res, next) => {
