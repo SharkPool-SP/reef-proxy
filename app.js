@@ -21,11 +21,14 @@ const REQUEST_TIMEOUT = 60 * 60 * 1000; // expires after 1 hour
 const PUBLIC_ROUTE = __dirname + "/public/";
 
 const limiter = new RateLimiter(MAX_REQUESTS, REQUEST_TIMEOUT);
+const proxyMiddleware = createProxyMiddleware(PROXY_OPTIONS);
 const app = express();
 
 /* Setup */
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use("/api", express.json());
+app.use("/scrape", express.json());
+app.use("/api", express.urlencoded({ extended: false }));
+app.use("/scrape", express.urlencoded({ extended: false }));
 
 app.use((req, _res, next) => {
   // Allow req.query to be writable as express ver 5.x disables writing to req.query
@@ -50,7 +53,7 @@ app.get(
   "/get",
   limiter.handleRequest,
   validateTargetUrl,
-  createProxyMiddleware(PROXY_OPTIONS),
+  proxyMiddleware,
 );
 
 // POST request
@@ -58,14 +61,7 @@ app.post(
   "/post",
   limiter.handleRequest,
   validateTargetUrl,
-  (req, res, next) => {
-    if (isValidObject(req.body)) createProxyMiddleware(PROXY_OPTIONS);
-    else {
-      res.status(400).json({
-        error: "Request body must be an object containing request options!",
-      });
-    }
-  },
+  proxyMiddleware,
 );
 
 // SCRAPE request
@@ -116,6 +112,11 @@ app.get("/", (req, res) => {
 
 app.get("/help", (req, res) => {
   res.sendFile(PUBLIC_ROUTE + "pages/docs.html");
+});
+
+app.get("/wakeup-service", (req, res) => {
+  res.status(200);
+  res.send("");
 });
 
 app.use((req, res) => {
