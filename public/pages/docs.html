@@ -26,6 +26,14 @@
         <span>Donate with PayPal</span>
       </a>
       <br /><br />
+      <a href="https://buymeacoffee.com/sharkpool" target="_blank">
+        <img
+          width="25px"
+          src="https://images.seeklogo.com/logo-png/47/2/buy-me-a-coffee-logo-png_seeklogo-477198.png"
+        />
+        <span>Buy Me a Coffee</span>
+      </a>
+      <br /><br />
       <a href="https://github.com/SharkPool-SP/reef-proxy/" target="_blank">
         <img
           width="25px"
@@ -37,9 +45,20 @@
     <h3>🛈 Rate Limits and Privacy</h3>
     <p>
       Reef Proxy temporarily stores your IP address solely for rate limiting. IP
-      addresses are not permanently stored or shared. Each client is limited to
-      <strong>50 requests per hour</strong>.
+      addresses are not permanently stored or shared.
+      <br /><br />
+      Our proxy also implements usage caps to maintain our service per client:
     </p>
+    <ul>
+      <li>
+        <strong>Standard Requests</strong>: 50 GET or POST requests per hour
+      </li>
+      <li><strong>Scrape Endpoint</strong>: 10 scraping requests per hour</li>
+      <li>
+        <strong>Payload Size Cap</strong>: Requests larger than 30MB are
+        automatically aborted
+      </li>
+    </ul>
     <h2>Available Endpoints</h2>
     <ul>
       <li><code>/get</code> - Performs a GET request to the target URL.</li>
