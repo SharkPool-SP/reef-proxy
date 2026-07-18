@@ -1,8 +1,6 @@
 /**
- * Limit the number of proxy requests a user can make from their IP address.
+ * RateLimiter limits the number of requests a user can make from their IP address.
  */
-const CLEANUP_CYCLE = 15 * 60 * 1000; // 15 minutes
-
 class RateLimiter {
   constructor(maxReqs, timeout) {
     this.MAX_REQUESTS = Number(maxReqs);
@@ -10,23 +8,21 @@ class RateLimiter {
     this.handleRequest = this.handleRequest.bind(this);
     this._limiter = new Map();
     this._limiterInit = true;
-
-    this._scheduleCleanup();
   }
 
-  _scheduleCleanup() {
-    setInterval(() => {
-      const now = Date.now();
-      for (const [key, record] of this._limiter.entries()) {
-        if (now > record.exp) this._limiter.delete(key);
-      }
-    }, CLEANUP_CYCLE);
+  scheduledCleanup() {
+    if (!this._limiterInit) return;
+
+    const now = Date.now();
+    for (const [key, record] of this._limiter.entries()) {
+      if (now > record.exp) this._limiter.delete(key);
+    }
   }
 
-  handleRequest(req, res, next) {
+  handleRequest(req, res) {
     if (!this._limiterInit) {
       res.status(500).send("Server Error: Rate limiter has not initialized!");
-      return;
+      return false;
     }
 
     const ipIdentifier = req.ip || req.headers["x-forwarded-for"] || "unknown";
@@ -45,13 +41,13 @@ class RateLimiter {
         record.exp = now + this.REQ_TIMEOUT;
       } else if (record.cnt >= this.MAX_REQUESTS) {
         res.status(429).send("Rate Limit Exceeded. Please try again later.");
-        return;
+        return false;
       } else {
         record.cnt++;
       }
     }
 
-    next();
+    return true;
   }
 }
 
