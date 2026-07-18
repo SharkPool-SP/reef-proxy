@@ -121,7 +121,6 @@ const validateContentLength = async function (targetUrl, res) {
     });
 
     const length = headRes.headers.get("content-length");
-    console.log(length);
     if (length && Number(length) > MAX_CONTENT_LENGTH) {
       res.status(413).json({
         error: `Target response exceeds ${MAX_CONTENT_LENGTH / (1024 * 1024)}MB limit`,
