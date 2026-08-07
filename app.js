@@ -11,6 +11,8 @@ require("dotenv").config();
 const {
   PROXY_OPTIONS,
   getTargetUrl,
+  MAX_CONTENT_LENGTH,
+  sendResExceedsLimit,
   requestHandler,
 } = require("./private/proxy-utils.js");
 const RateLimiter = require("./private/rate-limiter.js");
@@ -108,16 +110,22 @@ app.get("/scrape", handleRequest, async (req, res) => {
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
     });
 
+    // TODO set up a blacklist for malicious sites
     const page = await browser.newPage();
     await page.goto(targetUrl.href, { waitUntil: "networkidle2" });
     await new Promise((resolve) => setTimeout(resolve, scrapeDelay));
 
+    // TODO could be cheaper to let the client decide what element to scrape
     const htmlContent = await page.content();
     await browser.close();
 
     const body = Buffer.from(htmlContent, "utf8");
-    res.setHeader("Content-Type", "text/html");
+    if (body.length > MAX_CONTENT_LENGTH) {
+      sendResExceedsLimit(res);
+      return;
+    }
 
+    res.setHeader("Content-Type", "text/html");
     TargetCache.handleResponse(req, targetUrl, 200, "text/html", body);
     res.status(200).send(body);
   } catch (e) {

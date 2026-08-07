@@ -1,7 +1,7 @@
 const zlib = require("zlib");
 const TargetCache = require("./cacher.js");
 
-const MAX_CONTENT_LENGTH = 30 * 1024 * 1024; // We wont accept resources above 30MB
+const MAX_CONTENT_LENGTH = 30 * 1024 * 1024; // We wont accept/return resources above 30MB
 const HEAD_CHECK_TIMEOUT = 5000; // 5 seconds max to fetch the HEAD
 const CACHE_EXPIRES_SECS = 60 * 60; // expires after 1 hour
 
@@ -19,6 +19,8 @@ const PROXY_OPTIONS = {
       proxyReq.removeHeader("x-target-url");
     },
     proxyRes(proxyRes, req, res) {
+      watchResponseSize(proxyRes, res);
+
       res.statusCode = proxyRes.statusCode;
       const isOk = res.statusCode >= 200 && res.statusCode < 300;
 
@@ -59,6 +61,11 @@ const PROXY_OPTIONS = {
             body = Buffer.concat(chunks);
             res.setHeader("content-encoding", encoding);
           }
+        }
+
+        if (body.length > MAX_CONTENT_LENGTH) {
+          sendResExceedsLimit(res);
+          return;
         }
 
         TargetCache.handleResponse(
@@ -106,6 +113,19 @@ const validateTargetUrl = function (req, res, next) {
 };
 
 /**
+ * Responds to the client that the requested resource exceeds the limit.
+ * 
+ * @param {Response} res Express response object
+ */
+const sendResExceedsLimit = function (res) {
+  if (res.headersSent) return;
+
+  res.status(413).json({
+    error: `Target response exceeds ${MAX_CONTENT_LENGTH / (1024 * 1024)}MB limit`,
+  });
+};
+
+/**
  * HEAD-check target to reject oversized responses before proxying.
  *
  * @param {URL} targetUrl
@@ -122,9 +142,7 @@ const validateContentLength = async function (targetUrl, res) {
 
     const length = headRes.headers.get("content-length");
     if (length && Number(length) > MAX_CONTENT_LENGTH) {
-      res.status(413).json({
-        error: `Target response exceeds ${MAX_CONTENT_LENGTH / (1024 * 1024)}MB limit`,
-      });
+      sendResExceedsLimit(res);
       return false;
     }
   } catch {
@@ -132,6 +150,24 @@ const validateContentLength = async function (targetUrl, res) {
   }
 
   return true;
+};
+
+/**
+ * Monitors a proxied response stream and terminates it if it exceeds the maximum allowed size.
+ *
+ * @param {IncomingMessage} proxyRes Response stream received
+ * @param {Response} res Express response object
+ */
+const watchResponseSize = function (proxyRes, res) {
+  let size = 0;
+  proxyRes.on("data", (chunk) => {
+    size += chunk.length;
+
+    if (size > MAX_CONTENT_LENGTH) {
+      proxyRes.destroy();
+      sendResExceedsLimit(res);
+    }
+  });
 };
 
 /**
@@ -202,6 +238,8 @@ module.exports = {
   PROXY_OPTIONS,
   getTargetUrl,
   validateTargetUrl,
+  MAX_CONTENT_LENGTH,
+  sendResExceedsLimit,
   removeExtraHeaders,
   requestHandler,
 };
