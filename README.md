@@ -6,11 +6,9 @@
 
 Reef Proxy is a free service. Running and maintaining the proxy requires ongoing server costs. If you find it useful, please consider supporting us with a donation.
 
-**[Donate with PayPal](https://www.paypal.com/donate/?business=AGLGGVQWUBUFE&no_recurring=0&item_name=Help+pay+for+my+College+Education&currency_code=CAD)**
+**[All Donation Options](https://sharkpool-sp.github.io/donations/)**
 
 **[Buy Me a Coffee](https://buymeacoffee.com/sharkpool)**
-
-Alternatively, contact me on GitHub or Discord to discuss E-Transfers.
 
 ### 🛈 Rate Limits and Privacy
 
