@@ -90,9 +90,11 @@ app.use(
 /* API */
 // GET request
 app.get("/get", handleRequest, proxyMiddleware);
+app.head("/get", handleRequest, proxyMiddleware);
 
 // POST request
 app.post("/post", handleRequest, proxyMiddleware);
+app.head("/post", handleRequest, proxyMiddleware);
 
 // SCRAPE request
 app.get("/scrape", handleRequest, async (req, res) => {
