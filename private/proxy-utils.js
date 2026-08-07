@@ -226,6 +226,11 @@ const requestHandler = async function (req, res, next) {
   const urlValidated = validateTargetUrl(req, res);
   if (!urlValidated) return;
 
+  if (req.method === "HEAD") {
+    next();
+    return;
+  }
+
   const targetUrl = getTargetUrl(req);
   const hasNoCache = cache.handleRequest(req, res, targetUrl);
   if (!hasNoCache) return;
