@@ -4,6 +4,7 @@ const TargetCache = require("./cacher.js");
 const MAX_CONTENT_LENGTH = 30 * 1024 * 1024; // We wont accept/return resources above 30MB
 const HEAD_CHECK_TIMEOUT = 5000; // 5 seconds max to fetch the HEAD
 const CACHE_EXPIRES_SECS = 60 * 60; // expires after 1 hour
+const DEBUG = process.env.DEBUG === "true" || process.env.DEBUG === "1";
 
 const PROXY_OPTIONS = {
   router: (req) => getTargetUrl(req).origin,
@@ -114,7 +115,7 @@ const validateTargetUrl = function (req, res, next) {
 
 /**
  * Responds to the client that the requested resource exceeds the limit.
- * 
+ *
  * @param {Response} res Express response object
  */
 const sendResExceedsLimit = function (res) {
@@ -126,13 +127,12 @@ const sendResExceedsLimit = function (res) {
 };
 
 /**
- * HEAD-check target to reject oversized responses before proxying.
+ * Fetches the content length of a target resource using a HEAD request.
  *
  * @param {URL} targetUrl
- * @param {Response} res Express response object
- * @returns {Promise<boolean>} whether the request may proceed
+ * @returns Content length of the target resource, or null if it cannot be determined
  */
-const validateContentLength = async function (targetUrl, res) {
+const getContentLength = async function (targetUrl) {
   try {
     const headRes = await fetch(targetUrl.href, {
       method: "HEAD",
@@ -141,12 +141,25 @@ const validateContentLength = async function (targetUrl, res) {
     });
 
     const length = headRes.headers.get("content-length");
-    if (length && Number(length) > MAX_CONTENT_LENGTH) {
-      sendResExceedsLimit(res);
-      return false;
-    }
+    return length ? Number(length) : null;
   } catch {
     // HEAD is unsupported/blocked/timed out... just let it request
+    return null;
+  }
+};
+
+/**
+ * HEAD-check target to reject oversized responses before proxying.
+ *
+ * @param {URL} targetUrl
+ * @param {Response} res Express response object
+ * @returns {Promise<boolean>} whether the request may proceed
+ */
+const validateContentLength = async function (targetUrl, res) {
+  const length = await getContentLength(targetUrl);
+  if (length !== null && length > MAX_CONTENT_LENGTH) {
+    sendResExceedsLimit(res);
+    return false;
   }
 
   return true;
@@ -226,12 +239,18 @@ const requestHandler = async function (req, res, next) {
   const urlValidated = validateTargetUrl(req, res);
   if (!urlValidated) return;
 
+  const targetUrl = getTargetUrl(req);
+  if (DEBUG) {
+    console.log(targetUrl.href);
+  }
+
   if (req.method === "HEAD") {
-    next();
+    const contentLength = await getContentLength(targetUrl);
+    res.setHeader("Content-Length", contentLength);
+    res.status(200).end();
     return;
   }
 
-  const targetUrl = getTargetUrl(req);
   const hasNoCache = cache.handleRequest(req, res, targetUrl);
   if (!hasNoCache) return;
 
@@ -241,9 +260,9 @@ const requestHandler = async function (req, res, next) {
 
 module.exports = {
   PROXY_OPTIONS,
+  MAX_CONTENT_LENGTH,
   getTargetUrl,
   validateTargetUrl,
-  MAX_CONTENT_LENGTH,
   sendResExceedsLimit,
   removeExtraHeaders,
   requestHandler,
