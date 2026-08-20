@@ -1,3 +1,5 @@
+const crypto = require("crypto");
+
 /**
  * TargetCache temporarily caches responses to save bandwidth.
  */
@@ -23,8 +25,14 @@ class TargetCache {
   static initialized = false;
 
   static _genCacheID(req, targetUrl) {
-    const encoders = [req.path, targetUrl.href, JSON.stringify(req.body)];
-    return Buffer.from(encoders.join("|"), "utf8").toString("base64");
+    const key = JSON.stringify({
+      path: req.path,
+      url: targetUrl.href,
+      body: req.body ?? null,
+      transform: req.headers["x-transform"] ?? null,
+    });
+
+    return crypto.createHash("sha256").update(key, "utf8").digest("hex");
   }
 
   static isCacheable(contentType) {

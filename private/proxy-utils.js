@@ -1,10 +1,25 @@
+/* Module Imports */
 const zlib = require("zlib");
-const TargetCache = require("./cacher.js");
+const puppeteer = require("puppeteer");
 
-const MAX_CONTENT_LENGTH = 30 * 1024 * 1024; // We wont accept/return resources above 30MB
+/* Local Imports */
+const blockedUrls = require("./blocklist.json");
+const TargetCache = require("./cacher.js");
+const { applyTransformation } = require("./transformer.js");
+const {
+  MAX_CONTENT_LENGTH,
+  sendResExceedsLimit,
+  getContentLength,
+  validateContentLength,
+  watchResponseSize,
+  removeExtraHeaders,
+  decompressBody,
+} = require("./pipeline-utils.js");
+
+/* Setup */
 const HEAD_CHECK_TIMEOUT = 5000; // 5 seconds max to fetch the HEAD
 const CACHE_EXPIRES_SECS = 60 * 60; // expires after 1 hour
-const DEBUG = process.env.DEBUG === "true" || process.env.DEBUG === "1";
+const DEBUG_MODE = process.env.DEBUG === "true" || process.env.DEBUG === "1";
 
 const PROXY_OPTIONS = {
   router: (req) => getTargetUrl(req).origin,
@@ -18,8 +33,11 @@ const PROXY_OPTIONS = {
   on: {
     proxyReq(proxyReq, req) {
       proxyReq.removeHeader("x-target-url");
+      proxyReq.removeHeader("x-wait-seconds");
+      proxyReq.removeHeader("x-transform");
+      proxyReq.setHeader("accept-encoding", "identity");
     },
-    proxyRes(proxyRes, req, res) {
+    async proxyRes(proxyRes, req, res) {
       watchResponseSize(proxyRes, res);
 
       res.statusCode = proxyRes.statusCode;
@@ -29,7 +47,6 @@ const PROXY_OPTIONS = {
         if (value !== undefined) res.setHeader(key, value);
       }
 
-      // Only tell clients to cache successful responses
       res.setHeader(
         "Cache-Control",
         isOk
@@ -39,44 +56,81 @@ const PROXY_OPTIONS = {
 
       removeExtraHeaders(proxyRes);
 
-      // We should only cache text-like MIMEs, others can be streamed.
       const contentType = proxyRes.headers["content-type"] || "";
-      if (!(isOk && TargetCache.isCacheable(contentType))) {
+      const hasTransformation = Boolean(req.headers["x-transform"]);
+      if (
+        !hasTransformation &&
+        !(isOk && TargetCache.isCacheable(contentType))
+      ) {
         proxyRes.pipe(res);
         return;
       }
 
       const chunks = [];
       proxyRes.on("data", (chunk) => chunks.push(chunk));
-      proxyRes.on("end", () => {
-        let body = Buffer.concat(chunks);
-        const encoding = proxyRes.headers["content-encoding"];
+      proxyRes.on("end", async () => {
+        try {
+          let body = Buffer.concat(chunks);
 
-        if (encoding) {
-          try {
-            body = decompressBody(encoding, body);
-            res.removeHeader("content-encoding");
+          const encoding = proxyRes.headers["content-encoding"];
+          if (encoding) {
+            try {
+              body = decompressBody(encoding, body);
+
+              res.removeHeader("content-encoding");
+              res.removeHeader("content-length");
+            } catch {
+              // Preserve the content as-is if decompression fails
+              body = Buffer.concat(chunks);
+              res.setHeader("content-encoding", encoding);
+            }
+          }
+
+          if (body.length > MAX_CONTENT_LENGTH) {
+            sendResExceedsLimit(res);
+            return;
+          }
+
+          let finalContentType = contentType;
+          if (hasTransformation) {
+            const { type, content } = await applyTransformation(
+              "proxy",
+              req,
+              body,
+              contentType,
+            );
+
+            body = content;
+            finalContentType = type;
+
+            // The transformed body has a new size.
             res.removeHeader("content-length");
-          } catch {
-            // Preserve the content as-is if decompression fails
-            body = Buffer.concat(chunks);
-            res.setHeader("content-encoding", encoding);
+            res.setHeader("Content-Type", type);
+          }
+
+          if (body.length > MAX_CONTENT_LENGTH) {
+            sendResExceedsLimit(res);
+            return;
+          }
+
+          if (isOk) {
+            TargetCache.handleResponse(
+              req,
+              getTargetUrl(req),
+              res.statusCode,
+              finalContentType,
+              body,
+            );
+          }
+
+          res.end(body);
+        } catch (e) {
+          if (!res.headersSent) {
+            res.status(400).json({ error: e.message || String(e) });
+          } else {
+            res.end();
           }
         }
-
-        if (body.length > MAX_CONTENT_LENGTH) {
-          sendResExceedsLimit(res);
-          return;
-        }
-
-        TargetCache.handleResponse(
-          req,
-          getTargetUrl(req),
-          res.statusCode,
-          contentType,
-          body,
-        );
-        res.end(body);
       });
     },
   },
@@ -92,7 +146,13 @@ const getTargetUrl = function (req) {
   const target = req.headers["x-target-url"] || req.query.url || req.query.u;
   if (!target) return null;
 
-  return new URL(target);
+  try {
+    if (target.startsWith("https://") || target.startsWith("http://")) {
+      return new URL(target);
+    }
+  } catch {}
+
+  return null;
 };
 
 /**
@@ -105,7 +165,8 @@ const getTargetUrl = function (req) {
 const validateTargetUrl = function (req, res, next) {
   if (!getTargetUrl(req)) {
     res.status(400).json({
-      error: "Missing proxy target destination. See docs at '/help' or '/'",
+      error:
+        "Missing proxy target destination/resource. See docs at '/help' or '/'",
     });
     return false;
   }
@@ -114,111 +175,50 @@ const validateTargetUrl = function (req, res, next) {
 };
 
 /**
- * Responds to the client that the requested resource exceeds the limit.
+ * Performs a scrape request.
  *
+ * @param {Request} req Express request object
  * @param {Response} res Express response object
  */
-const sendResExceedsLimit = function (res) {
-  if (res.headersSent) return;
+const handleScrape = async (req, res) => {
+  const targetUrl = getTargetUrl(req);
+  const waitTime = parseInt(
+    req.headers["x-wait-seconds"] || req.query.wait || "0",
+    10,
+  );
+  const scrapeDelay = 1000 * Math.max(0, Math.min(10, waitTime));
 
-  res.status(413).json({
-    error: `Target response exceeds ${MAX_CONTENT_LENGTH / (1024 * 1024)}MB limit`,
-  });
-};
-
-/**
- * Fetches the content length of a target resource using a HEAD request.
- *
- * @param {URL} targetUrl
- * @returns Content length of the target resource, or null if it cannot be determined
- */
-const getContentLength = async function (targetUrl) {
+  let browser;
   try {
-    const headRes = await fetch(targetUrl.href, {
-      method: "HEAD",
-      redirect: "follow",
-      signal: AbortSignal.timeout(HEAD_CHECK_TIMEOUT),
+    browser = await puppeteer.launch({
+      headless: true,
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
     });
 
-    const length = headRes.headers.get("content-length");
-    return length ? Number(length) : null;
-  } catch {
-    // HEAD is unsupported/blocked/timed out... just let it request
-    return null;
-  }
-};
+    const page = await browser.newPage();
+    await page.goto(targetUrl.href, { waitUntil: "networkidle2" });
+    await new Promise((resolve) => setTimeout(resolve, scrapeDelay));
 
-/**
- * HEAD-check target to reject oversized responses before proxying.
- *
- * @param {URL} targetUrl
- * @param {Response} res Express response object
- * @returns {Promise<boolean>} whether the request may proceed
- */
-const validateContentLength = async function (targetUrl, res) {
-  const length = await getContentLength(targetUrl);
-  if (length !== null && length > MAX_CONTENT_LENGTH) {
-    sendResExceedsLimit(res);
-    return false;
-  }
+    const { type, content } = await applyTransformation(
+      "scrape",
+      req,
+      page,
+      "text/html",
+    );
+    await browser.close();
 
-  return true;
-};
-
-/**
- * Monitors a proxied response stream and terminates it if it exceeds the maximum allowed size.
- *
- * @param {IncomingMessage} proxyRes Response stream received
- * @param {Response} res Express response object
- */
-const watchResponseSize = function (proxyRes, res) {
-  let size = 0;
-  proxyRes.on("data", (chunk) => {
-    size += chunk.length;
-
-    if (size > MAX_CONTENT_LENGTH) {
-      proxyRes.destroy();
+    const body = Buffer.from(content, "utf8");
+    if (body.length > MAX_CONTENT_LENGTH) {
       sendResExceedsLimit(res);
+      return;
     }
-  });
-};
 
-/**
- * Remove unnecessary headers to save some Bandwidth/payload size.
- *
- * @param {Response} res Express response object
- */
-const removeExtraHeaders = function (res) {
-  delete res.headers["set-cookie"];
-  delete res.headers["cookie"];
-  delete res.headers["x-runtime"];
-  delete res.headers["server"];
-  delete res.headers["x-powered-by"];
-  delete res.headers["report-to"];
-  delete res.headers["nel"];
-  delete res.headers["cf-ray"];
-  delete res.headers["cf-cache-status"];
-  delete res.headers["alt-svc"];
-};
-
-/**
- * Decompresses a response body for cache.
- *
- * @param {String} encoding Encoding used on content
- * @param {*} body Content to decompress
- * @returns Decompressed body
- */
-const decompressBody = (encoding, body) => {
-  switch (encoding) {
-    case "gzip":
-    case "x-gzip":
-      return zlib.gunzipSync(body);
-    case "br":
-      return zlib.brotliDecompressSync(body);
-    case "deflate":
-      return zlib.inflateSync(body);
-    default:
-      return body;
+    res.setHeader("Content-Type", type);
+    TargetCache.handleResponse(req, targetUrl, 200, type, body);
+    res.status(200).send(body);
+  } catch (e) {
+    if (browser) await browser.close();
+    res.status(500).json({ error: e.message || e });
   }
 };
 
@@ -233,15 +233,24 @@ const decompressBody = (encoding, body) => {
 const requestHandler = async function (req, res, next) {
   const { proxyLimiter, scrapeLimiter, cache } = this;
 
-  const limiterSuccess = proxyLimiter.handleRequest(req, res);
+  const limiterSuccess = req.url.startsWith("/scrape")
+    ? scrapeLimiter.handleRequest(req, res)
+    : proxyLimiter.handleRequest(req, res);
   if (!limiterSuccess) return;
 
   const urlValidated = validateTargetUrl(req, res);
   if (!urlValidated) return;
 
   const targetUrl = getTargetUrl(req);
-  if (DEBUG) {
-    console.log(targetUrl.href);
+  if (blockedUrls.find((url) => targetUrl.href.startsWith(url))) {
+    res.status(403).json({
+      error: `Target resource is blocked by Reef Proxy`,
+    });
+    return;
+  }
+
+  if (DEBUG_MODE) {
+    console.log(`REQ: ${req.url} - URL: ${targetUrl.href}`);
   }
 
   if (req.method === "HEAD") {
@@ -260,10 +269,8 @@ const requestHandler = async function (req, res, next) {
 
 module.exports = {
   PROXY_OPTIONS,
-  MAX_CONTENT_LENGTH,
   getTargetUrl,
   validateTargetUrl,
-  sendResExceedsLimit,
-  removeExtraHeaders,
+  handleScrape,
   requestHandler,
 };

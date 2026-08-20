@@ -1,0 +1,46 @@
+[
+  "http://localhost:",
+  "https://localhost:",
+  "http://127.0.0.1:",
+  "https://127.0.0.1:",
+  "http://[::1]:",
+  "https://[::1]:",
+
+  "http://0.0.0.0:",
+  "https://0.0.0.0:",
+  "http://169.254.169.254/",
+  "https://169.254.169.254/",
+
+  "https://httpbin.org/",
+  "https://raw.githubusercontent.com/",
+  "https://gist.githubusercontent.com/",
+  "https://translatorassets.kiok.jp/",
+
+  "https://bitbucket.org/",
+  "https://npmjs.com/",
+  "https://registry.npmjs.org/",
+  "https://pypi.org/",
+  "https://rubygems.org/",
+  "https://crates.io/",
+  "https://packagist.org/",
+
+  "https://fonts.googleapis.com/",
+  "https://fonts.gstatic.com/s/",
+  "https://fontawesome.com/",
+
+  "https://saruwakakun.com/",
+  "https://web.archive.org/",
+  "https://archive.org/",
+  "https://www.swsresearch.com/",
+  "https://blog.cryptographyengineering.com/",
+  "https://hacks.mozilla.org/feed/",
+  "https://blog.gtk.org/",
+  "https://dolphin-emu.org/blog/",
+  "https://v8.dev/",
+  "https://nces.ed.gov/",
+
+  "https://www.youtube.com/s/",
+
+  "https://duckduckgo.com/",
+  "https://play.google.com/"
+]

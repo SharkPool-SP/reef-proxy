@@ -4,7 +4,7 @@
 
 ## Support Reef Proxy
 
-Reef Proxy is a free service. Running and maintaining the proxy requires ongoing server costs. If you find it useful, please consider supporting us with a donation.
+**Reef Proxy is a free service.** Running and maintaining the proxy **requires** ongoing server costs. If you find it useful, please consider supporting us with a donation.
 
 **[All Donation Options](https://sharkpool-sp.github.io/donations/)**
 
@@ -19,6 +19,8 @@ Our proxy also implements usage caps to maintain our service per client:
 - **Standard Requests**: 50 GET or POST requests per hour
 - **Scrape Endpoint**: 10 scraping requests per hour
 - **Payload Size Cap**: Requests larger than 30MB are automatically aborted
+
+Please follow best practices when using our proxy. Cache responses when possible, check response headers before downloading resources, and avoid requesting unnecessarily large files. This helps reduce bandwidth and keeps the proxy available for everyone. :)
 
 ## Available Endpoints
 
@@ -51,3 +53,15 @@ Use the optional wait query parameter to specify how many seconds to wait before
 `/scrape?url=https://example.com&wait=5`
 
 The wait value must be between 0 and 10 seconds. If omitted, Reef Proxy uses the default wait time.
+
+### HEAD Support
+
+You can use the `HEAD` method with our `/get` or `/post` routes to retrieve response headers without downloading the response body. This includes `Content-Length`.
+
+### Transformation API
+
+**You** can help lower bandwidth usage (and keep our service up) by using our **Transformation API**!
+If you are fetching a **text-like resource** (such as text, HTML, JavaScript, CSS, etc.), you can use
+the Transformation API to return only the portion of the response you need.
+
+Read more **[here](./Transformations-API.md)**.

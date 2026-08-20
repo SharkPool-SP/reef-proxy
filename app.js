@@ -1,6 +1,5 @@
 /* Module Imports */
 const express = require("express");
-const puppeteer = require("puppeteer");
 const compression = require("compression");
 const cors = require("cors");
 const { createProxyMiddleware } = require("http-proxy-middleware");
@@ -10,11 +9,13 @@ require("dotenv").config();
 /* Local Imports */
 const {
   PROXY_OPTIONS,
-  getTargetUrl,
-  MAX_CONTENT_LENGTH,
-  sendResExceedsLimit,
+  handleScrape,
   requestHandler,
 } = require("./private/proxy-utils.js");
+const {
+  MAX_CONTENT_LENGTH,
+  sendResExceedsLimit,
+} = require("./private/pipeline-utils.js");
 const RateLimiter = require("./private/rate-limiter.js");
 const TargetCache = require("./private/cacher.js");
 
@@ -26,12 +27,12 @@ const REQUEST_TIMEOUT = 60 * 60 * 1000; // expires after 1 hour
 const CLEANUP_CYCLE = 15 * 60 * 1000; // 15 minutes
 const PUBLIC_ROUTE = __dirname + "/public/";
 
-// caches
+// Caches
 const proxyLimiter = new RateLimiter(MAX_REQUESTS, REQUEST_TIMEOUT);
 const scrapeLimiter = new RateLimiter(MAX_SCRAPES, REQUEST_TIMEOUT);
 TargetCache.init(REQUEST_TIMEOUT);
 
-// Automated cleanup process for cached data
+// Automate cleanup for cached data
 setInterval(() => {
   proxyLimiter.scheduledCleanup();
   scrapeLimiter.scheduledCleanup();
@@ -44,6 +45,7 @@ const handleRequest = requestHandler.bind({
   scrapeLimiter,
   cache: TargetCache,
 });
+
 const app = express();
 
 /* Route Setup */
@@ -83,7 +85,13 @@ app.use(
 app.use(
   cors({
     origin: "*",
-    allowedHeaders: ["Content-Type", "Authorization", "x-target-url"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "x-target-url",
+      "x-wait-seconds",
+      "x-transform",
+    ],
   }),
 );
 
@@ -97,44 +105,7 @@ app.post("/post", handleRequest, proxyMiddleware);
 app.head("/post", handleRequest, proxyMiddleware);
 
 // SCRAPE request
-app.get("/scrape", handleRequest, async (req, res) => {
-  const targetUrl = getTargetUrl(req);
-  const waitTime = parseInt(
-    req.headers["x-wait-seconds"] || req.query.wait || "0",
-    10,
-  );
-  const scrapeDelay = 1000 * Math.max(0, Math.min(10, waitTime));
-
-  let browser;
-  try {
-    browser = await puppeteer.launch({
-      headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    });
-
-    // TODO set up a blacklist for malicious sites
-    const page = await browser.newPage();
-    await page.goto(targetUrl.href, { waitUntil: "networkidle2" });
-    await new Promise((resolve) => setTimeout(resolve, scrapeDelay));
-
-    // TODO could be cheaper to let the client decide what element to scrape
-    const htmlContent = await page.content();
-    await browser.close();
-
-    const body = Buffer.from(htmlContent, "utf8");
-    if (body.length > MAX_CONTENT_LENGTH) {
-      sendResExceedsLimit(res);
-      return;
-    }
-
-    res.setHeader("Content-Type", "text/html");
-    TargetCache.handleResponse(req, targetUrl, 200, "text/html", body);
-    res.status(200).send(body);
-  } catch (e) {
-    if (browser) await browser.close();
-    res.status(500).json({ error: e.message || e });
-  }
-});
+app.get("/scrape", handleRequest, handleScrape);
 
 /* Pages */
 const routeDocs = (_, res) => res.sendFile(PUBLIC_ROUTE + "pages/docs.html");

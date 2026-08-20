@@ -10,15 +10,13 @@
     </p>
     <h2>Support Reef Proxy</h2>
     <p>
-      Reef Proxy is a free service. Running and maintaining the proxy requires
+      <b>Reef Proxy is a free service.</b> Running and maintaining the proxy
+      <b>requires</b>
       ongoing server costs. If you find it useful, please consider supporting us
       with a donation.
     </p>
     <div>
-      <a
-        href="https://sharkpool-sp.github.io/donations/"
-        target="_blank"
-      >
+      <a href="https://sharkpool-sp.github.io/donations/" target="_blank">
         <span><b>[ See Payment Options ]</b></span>
       </a>
       <br /><br />
@@ -27,7 +25,7 @@
           width="25px"
           src="https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg"
         />
-        <span><b>Contact on GitHub</b></span>
+        <span><b>See our GitHub</b></span>
       </a>
     </div>
     <h3>🛈 Rate Limits and Privacy</h3>
@@ -47,6 +45,12 @@
         automatically aborted
       </li>
     </ul>
+    <p>
+      Please follow best practices when using our proxy. Cache responses when
+      possible, check response headers before downloading resources, and avoid
+      requesting unnecessarily large files. This helps reduce bandwidth and
+      keeps the proxy available for everyone. :)
+    </p>
     <h2>Available Endpoints</h2>
     <ul>
       <li><code>/get</code> - Performs a GET request to the target URL.</li>
@@ -90,6 +94,24 @@
       The <code>wait</code> value must be between <code>0</code> and
       <code>10</code> seconds. If omitted, Reef Proxy uses the default wait
       time.
+    </p>
+    <h3>HEAD Support</h3>
+    <p>
+      You can use the <code>HEAD</code> method with our <code>/get</code> or
+      <code>/post</code> routes to retrieve response headers without downloading
+      the response body. This includes <code>Content-Length</code>.
+    </p>
+    <h3>Transformation API</h3>
+    <p>
+      <b>You</b> can help lower bandwidth usage (and keep our service up) by
+      using our <b>Transformation API</b>! If you are fetching a
+      <b>text-like resource</b> (such as text, HTML, JavaScript, CSS, etc.), you
+      can use the Transformation API to return only the portion of the response
+      you need. Read more
+      <a
+        href="https://github.com/SharkPool-SP/reef-proxy/Transformations-API.md"
+        ><b>here</b></a
+      >.
     </p>
   </body>
 </html>
