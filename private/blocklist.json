@@ -31,17 +31,21 @@
   "https://saruwakakun.com/",
   "https://web.archive.org/",
   "https://archive.org/",
+
+  "https://nces.ed.gov/",
+  "https://www.legislation.gov.uk/",
+  "https://www.cbc.ca/",
+
   "https://www.swsresearch.com/",
   "https://blog.cryptographyengineering.com/",
   "https://hacks.mozilla.org/feed/",
   "https://blog.gtk.org/",
   "https://dolphin-emu.org/blog/",
   "https://v8.dev/",
-  "https://nces.ed.gov/",
-  "https://www.legislation.gov.uk/",
-  "https://www.cbc.ca/",
   "https://relay.fm/",
   "https://www.forbes.com/",
+  "https://randomascii.",
+
   "https://httpbingo.org/",
   "https://rankings.statista.com/",
   "https://urlscan.io/api/",
@@ -50,9 +54,14 @@
   "https://www.youtube.com/s/",
   "https://www.youtube.com/channel//about",
   "https://www.youtube.com/@",
+  
   "https://dev-app.weatherfront.com/",
   "https://eniu.com/chart/",
 
   "https://duckduckgo.com/",
+  "https://x.com/",
+  "https://abs.twimg.com/",
+  "https://www.google.com/",
+  "https://www.gstatic.com/",
   "https://play.google.com/"
 ]
