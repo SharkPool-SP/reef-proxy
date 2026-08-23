@@ -12,10 +12,6 @@ const {
   handleScrape,
   requestHandler,
 } = require("./private/proxy-utils.js");
-const {
-  MAX_CONTENT_LENGTH,
-  sendResExceedsLimit,
-} = require("./private/pipeline-utils.js");
 const RateLimiter = require("./private/rate-limiter.js");
 const TargetCache = require("./private/cacher.js");
 
