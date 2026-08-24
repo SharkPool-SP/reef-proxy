@@ -55,6 +55,7 @@
   "https://rankings.statista.com/",
   "https://urlscan.io/api/",
   "https://validator.w3.org/",
+  "https://api.gbif.org/",
 
   "https://www.youtube.com/s/",
   "https://www.youtube.com/channel//about",
@@ -62,6 +63,7 @@
   
   "https://dev-app.weatherfront.com/",
   "https://eniu.com/chart/",
+  "https://r.jina.ai/",
 
   "https://hanime1.me",
   "https://beeg.com",
@@ -78,7 +80,9 @@
   "https://duckduckgo.com/",
   "https://x.com/",
   "https://abs.twimg.com/",
+  "https://www.bing.com/",
   "https://www.google.com/",
   "https://www.gstatic.com/",
-  "https://play.google.com/"
+  "https://play.google.com/",
+  "https://calendar.google.com/"
 ]
