@@ -86,6 +86,7 @@ const PROXY_OPTIONS = {
             }
           }
 
+          if (DEBUG_MODE) console.log(`► SIZE (pre-transform): ${body.length}`);
           if (body.length > MAX_CONTENT_LENGTH) {
             sendResExceedsLimit(res);
             return;
@@ -108,6 +109,7 @@ const PROXY_OPTIONS = {
             res.setHeader("Content-Type", type);
           }
 
+          if (DEBUG_MODE) console.log(`► SIZE (post-transform): ${body.length}`);
           if (body.length > MAX_CONTENT_LENGTH) {
             sendResExceedsLimit(res);
             return;
@@ -208,6 +210,7 @@ const handleScrape = async (req, res) => {
     await browser.close();
 
     const body = Buffer.from(content, "utf8");
+    if (DEBUG_MODE) console.log(`► SIZE (scrape-post-transform): ${body.length}`);
     if (body.length > MAX_CONTENT_LENGTH) {
       sendResExceedsLimit(res);
       return;
@@ -250,7 +253,7 @@ const requestHandler = async function (req, res, next) {
   }
 
   if (DEBUG_MODE) {
-    console.log(`REQ: ${req.url} - URL: ${targetUrl.href}`);
+    console.log(`TYPE: ${String(req.url).split("?")[0]} - URL: ${targetUrl.href}`);
   }
 
   if (req.method === "HEAD") {
