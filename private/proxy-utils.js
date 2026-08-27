@@ -62,6 +62,10 @@ const PROXY_OPTIONS = {
         !hasTransformation &&
         !(isOk && TargetCache.isCacheable(contentType))
       ) {
+        if (DEBUG_MODE) {
+          console.log(`► SIZE (non-cache): ${req.headers["content-length"]} - URL: ${req.url}`);
+        }
+
         proxyRes.pipe(res);
         return;
       }
@@ -86,7 +90,9 @@ const PROXY_OPTIONS = {
             }
           }
 
-          if (DEBUG_MODE) console.log(`► SIZE (pre-transform): ${body.length}`);
+          if (DEBUG_MODE) {
+            console.log(`► SIZE (pre-transform): ${body.length} - URL: ${req.url}`);
+          }
           if (body.length > MAX_CONTENT_LENGTH) {
             sendResExceedsLimit(res);
             return;
@@ -109,7 +115,9 @@ const PROXY_OPTIONS = {
             res.setHeader("Content-Type", type);
           }
 
-          if (DEBUG_MODE) console.log(`► SIZE (post-transform): ${body.length}`);
+          if (DEBUG_MODE) {
+            console.log(`► SIZE (post-transform): ${body.length}`);
+          }
           if (body.length > MAX_CONTENT_LENGTH) {
             sendResExceedsLimit(res);
             return;
@@ -210,7 +218,10 @@ const handleScrape = async (req, res) => {
     await browser.close();
 
     const body = Buffer.from(content, "utf8");
-    if (DEBUG_MODE) console.log(`► SIZE (scrape-post-transform): ${body.length}`);
+    if (DEBUG_MODE) {
+      console.log(`SIZE (SCRAPE-post-transform): ${body.length} - URL: ${targetUrl.href}`);
+    }
+
     if (body.length > MAX_CONTENT_LENGTH) {
       sendResExceedsLimit(res);
       return;
@@ -245,7 +256,12 @@ const requestHandler = async function (req, res, next) {
   if (!urlValidated) return;
 
   const targetUrl = getTargetUrl(req);
-  if (blockedUrls.find((url) => targetUrl.href.startsWith(url))) {
+  const isBlocked = blockedUrls.find((url) => {
+    if (url.startsWith("http")) return targetUrl.href.startsWith(url);
+    else return targetUrl.href.includes(url);
+  });
+
+  if (isBlocked) {
     res.status(403).json({
       error: `Target resource is blocked by Reef Proxy`,
     });

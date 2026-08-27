@@ -14,6 +14,7 @@
   "https://httpbin.org/",
   "https://raw.githubusercontent.com/",
   "https://gist.githubusercontent.com/",
+  "https://api.github.com/",
   "https://translatorassets.kiok.jp/",
 
   "https://bitbucket.org/",
@@ -35,14 +36,7 @@
   "http://web.archive.org/",
   "https://archive.org/",
 
-  "https://nces.ed.gov/",
-  "https://www.legislation.gov.uk/",
-  "https://www.michigan.gov/",
-  "https://wwwn.cdc.gov/",
-  "https://www.cbc.ca/",
-
   "https://medic.upm.edu.my/",
-  "https://www.usherbrooke.ca/",
 
   "https://www.swsresearch.com/",
   "https://blog.cryptographyengineering.com/",
@@ -60,6 +54,8 @@
   "https://www.opg.com/",
   "https://www.cihi.ca/",
   "https://mcmillan.ca/",
+  "https://www.cbc.ca/",
+  "https://www.usherbrooke.ca/",
 
   "https://httpbingo.org/",
   "https://rankings.statista.com/",
@@ -96,5 +92,11 @@
   "https://www.gstatic.com/",
   "https://play.google.com/",
   "https://calendar.google.com/",
-  "https://www.amazon.com/"
+  "https://www.youtube.com/",
+  "https://www.amazon.com/",
+
+  ".fandom.com/",
+
+  ".gov/",
+  ".gov."
 ]
