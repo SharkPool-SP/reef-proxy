@@ -62,10 +62,6 @@ const PROXY_OPTIONS = {
         !hasTransformation &&
         !(isOk && TargetCache.isCacheable(contentType))
       ) {
-        if (DEBUG_MODE) {
-          console.log(`► SIZE (non-cache): ${req.headers["content-length"]} - URL: ${req.url}`);
-        }
-
         proxyRes.pipe(res);
         return;
       }
@@ -90,9 +86,6 @@ const PROXY_OPTIONS = {
             }
           }
 
-          if (DEBUG_MODE) {
-            console.log(`► SIZE (pre-transform): ${body.length} - URL: ${req.url}`);
-          }
           if (body.length > MAX_CONTENT_LENGTH) {
             sendResExceedsLimit(res);
             return;
@@ -269,7 +262,7 @@ const requestHandler = async function (req, res, next) {
   }
 
   if (DEBUG_MODE) {
-    console.log(`TYPE: ${String(req.url).split("?")[0]} - URL: ${targetUrl.href}`);
+    console.log(`START TYPE: ${String(req.url).split("?")[0]} - URL: ${targetUrl.href}`);
   }
 
   if (req.method === "HEAD") {

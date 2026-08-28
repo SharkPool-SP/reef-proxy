@@ -69,6 +69,12 @@ const watchResponseSize = function (proxyRes, res) {
       sendResExceedsLimit(res);
     }
   });
+
+  if (DEBUG_MODE) {
+    proxyRes.on("end", () => {
+      console.log(`► SIZE: ${size} - URL: ${proxyRes.url}`);
+    });
+  }
 };
 
 /**
