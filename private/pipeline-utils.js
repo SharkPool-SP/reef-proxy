@@ -1,5 +1,6 @@
 /* Setup */
 const MAX_CONTENT_LENGTH = 30 * 1024 * 1024; // We wont accept/return resources above 30MB
+const DEBUG_MODE = process.env.DEBUG === "true" || process.env.DEBUG === "1";
 
 /**
  * Responds to the client that the requested resource exceeds the limit.
