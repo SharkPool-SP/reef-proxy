@@ -1,5 +1,5 @@
 /* Setup */
-const MAX_CONTENT_LENGTH = 30 * 1024 * 1024; // We wont accept/return resources above 30MB
+const MAX_CONTENT_LENGTH = 20 * 1024 * 1024; // We wont accept/return resources above 20MB
 const DEBUG_MODE = process.env.DEBUG === "true" || process.env.DEBUG === "1";
 
 /**
@@ -11,7 +11,7 @@ const sendResExceedsLimit = function (res) {
   if (res.headersSent) return;
 
   res.status(413).json({
-    error: `Target resource exceeds ${MAX_CONTENT_LENGTH / (1024 * 1024)}MB limit`,
+    error: `Target resource exceeds ${MAX_CONTENT_LENGTH / (1024 * 1024)}MB limit. Try using our 'Transformation' API (refer to docs).`,
   });
 };
 

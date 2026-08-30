@@ -86,7 +86,7 @@ const PROXY_OPTIONS = {
             }
           }
 
-          if (body.length > MAX_CONTENT_LENGTH) {
+          if (!hasTransformation && body.length > MAX_CONTENT_LENGTH) {
             sendResExceedsLimit(res);
             return;
           }
