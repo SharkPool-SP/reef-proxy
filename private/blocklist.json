@@ -30,11 +30,8 @@
   "https://fontawesome.com/",
 
   "https://saruwakakun.com/",
-  "https://wayback.archive-it.org",
-  "http://wayback.archive-it.org",
-  "https://web.archive.org/",
-  "http://web.archive.org/",
-  "https://archive.org/",
+  "https://arquivo.pt/",
+  "https://livecodes.io/",
 
   "https://medic.upm.edu.my/",
 
@@ -100,6 +97,9 @@
   ".wikipedia.org/",
   ".savenow.to/api",
   ".amazonaws.com/Metadata/",
+  "wayback.archive-it.org/",
+  "web.archive.org/",
+  "archive.org/",
 
   ".gov/",
   ".gov."
