@@ -3,6 +3,8 @@
   "https://localhost:",
   "http://127.0.0.1:",
   "https://127.0.0.1:",
+  "https://183.192.52.86",
+  "http://183.192.52.86",
   "http://[::1]:",
   "https://[::1]:",
 
@@ -59,16 +61,19 @@
   "https://urlscan.io/api/",
   "https://validator.w3.org/",
   "https://api.gbif.org/",
+  "https://shell.duckdb.org/",
+  "https://data.barbour-abi.com/",
 
   "https://www.youtube.com/s/",
   "https://www.youtube.com/channel//about",
   "https://www.youtube.com/@",
-  
+
   "https://dev-app.weatherfront.com/",
   "https://eniu.com/chart/",
   "https://r.jina.ai/",
   "https://den.dco.org/",
   "https://stage.rwa.xyz/",
+  "https://lite.datasette.io/",
 
   "https://hanime1.me",
   "https://beeg.com",
