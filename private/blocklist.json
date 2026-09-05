@@ -81,6 +81,7 @@
   "https://lite.datasette.io/",
   "https://www.hljzfxy.org.cn/",
   "https://unctadstat.unctad.org/datacentre/",
+  "https://data.nber.org/",
 
   "https://hanime1.me",
   "https://beeg.com",
@@ -105,6 +106,7 @@
   "https://www.youtube.com/",
   "https://www.amazon.com/",
 
+  ".yahoo.com/",
   ".fandom.com/",
   ".wikipedia.org/",
   ".savenow.to/api",
