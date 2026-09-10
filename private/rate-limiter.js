@@ -6,7 +6,10 @@ class RateLimiter {
     this.MAX_REQUESTS = Number(maxReqs);
     this.REQ_TIMEOUT = Number(timeout);
     this.handleRequest = this.handleRequest.bind(this);
+
+    /** @type {Map<String, { cnt: Number, exp: Number }>} */
     this._limiter = new Map();
+
     this._limiterInit = true;
   }
 

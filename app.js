@@ -11,27 +11,32 @@ const {
   PROXY_OPTIONS,
   handleScrape,
   requestHandler,
-} = require("./private/proxy-utils.js");
+} = require("./private/proxy-pipeline.js");
 const RateLimiter = require("./private/rate-limiter.js");
+const HeatMap = require("./private/heat-map.js");
 const TargetCache = require("./private/cacher.js");
 
 /* Setup */
-const PORT = process.env.PORT || 3030;
-const MAX_REQUESTS = process.env.MAX_REQUESTS || 50; // MAX_REQUESTS per REQUEST_TIMEOUT
-const MAX_SCRAPES = process.env.MAX_SCRAPES || 10; // MAX_SCRAPES per REQUEST_TIMEOUT
-const REQUEST_TIMEOUT = 60 * 60 * 1000; // expires after 1 hour
-const CLEANUP_CYCLE = 15 * 60 * 1000; // 15 minutes
 const PUBLIC_ROUTE = __dirname + "/public/";
+const {
+  PORT,
+  MAX_REQUESTS,
+  MAX_SCRAPES,
+  REQUEST_TIMEOUT,
+  CLEANUP_CYCLE,
+} = require("./private/constants.js");
 
-// Caches
+// Caches & Limiters
 const proxyLimiter = new RateLimiter(MAX_REQUESTS, REQUEST_TIMEOUT);
 const scrapeLimiter = new RateLimiter(MAX_SCRAPES, REQUEST_TIMEOUT);
+HeatMap.init();
 TargetCache.init(REQUEST_TIMEOUT);
 
-// Automate cleanup for cached data
+// Automate cleanup for cached data.
 setInterval(() => {
   proxyLimiter.scheduledCleanup();
   scrapeLimiter.scheduledCleanup();
+  HeatMap.scheduledCleanup();
   TargetCache.scheduledCleanup();
 }, CLEANUP_CYCLE);
 
@@ -39,7 +44,7 @@ const proxyMiddleware = createProxyMiddleware(PROXY_OPTIONS);
 const handleRequest = requestHandler.bind({
   proxyLimiter,
   scrapeLimiter,
-  cache: TargetCache,
+  HeatMap,
 });
 
 const app = express();

@@ -21,7 +21,9 @@ class TargetCache {
   ];
   static CACHE_TIMEOUT = 0;
 
+  /** @type {Map<String, { exp: Number, status: Number, contentType: String, data: any }>} */
   static _cache = new Map();
+
   static initialized = false;
 
   static _genCacheID(req, targetUrl) {

@@ -1,6 +1,5 @@
 /* Setup */
-const MAX_CONTENT_LENGTH = 20 * 1024 * 1024; // We wont accept/return resources above 20MB
-const DEBUG_MODE = process.env.DEBUG === "true" || process.env.DEBUG === "1";
+const { MAX_CONTENT_LENGTH, HEAD_CHECK_TIMEOUT } = require("./constants.js");
 
 /**
  * Responds to the client that the requested resource exceeds the limit.
@@ -70,30 +69,6 @@ const watchResponseSize = function (proxyRes, res) {
       sendResExceedsLimit(res);
     }
   });
-
-  if (DEBUG_MODE) {
-    proxyRes.on("end", () => {
-      console.log(`► SIZE: ${size} - URL: ${proxyRes.url}`);
-    });
-  }
-};
-
-/**
- * Remove unnecessary headers to save some Bandwidth/payload size.
- *
- * @param {Response} res Express response object
- */
-const removeExtraHeaders = function (res) {
-  delete res.headers["set-cookie"];
-  delete res.headers["cookie"];
-  delete res.headers["x-runtime"];
-  delete res.headers["server"];
-  delete res.headers["x-powered-by"];
-  delete res.headers["report-to"];
-  delete res.headers["nel"];
-  delete res.headers["cf-ray"];
-  delete res.headers["cf-cache-status"];
-  delete res.headers["alt-svc"];
 };
 
 /**
@@ -122,6 +97,5 @@ module.exports = {
   getContentLength,
   validateContentLength,
   watchResponseSize,
-  removeExtraHeaders,
   decompressBody,
 };
