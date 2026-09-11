@@ -41,17 +41,22 @@ const PROXY_OPTIONS = {
       cleanupHeaders(proxyReq);
     },
     async proxyRes(proxyRes, req, res) {
-      watchResponseSize(proxyRes, res);
-
       removeExtraHeaders(proxyRes);
       const isOk = setupResponseHeaders(proxyRes, res);
+      const targetUrl = getTargetUrl(req);
 
       const contentType = proxyRes.headers["content-type"] || "";
       const hasTransformation = Boolean(req.headers["x-transform"]);
-      if (
-        !hasTransformation &&
-        !(isOk && TargetCache.isCacheable(contentType))
-      ) {
+      const willDirectlyPipe = !hasTransformation &&
+        !(isOk && TargetCache.isCacheable(contentType));
+
+      watchResponseSize(proxyRes, res, (contentLength) => {
+        if (willDirectlyPipe) {
+          HeatMap.handleResponse(req, res, targetUrl.href, contentLength);
+        }
+      });
+
+      if (willDirectlyPipe) {
         proxyRes.pipe(res);
         return;
       }
@@ -101,7 +106,7 @@ const PROXY_OPTIONS = {
           responseHandler(req, res, body, {
             isOk,
             contentType: finalContentType,
-            targetUrl: getTargetUrl(req),
+            targetUrl: targetUrl,
           });
         } catch (e) {
           if (!res.headersSent) {

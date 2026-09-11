@@ -1,4 +1,5 @@
 /* Setup */
+const HeatMap = require("./heat-map.js");
 const { MAX_CONTENT_LENGTH, HEAD_CHECK_TIMEOUT } = require("./constants.js");
 
 /**
@@ -58,8 +59,9 @@ const validateContentLength = async function (targetUrl, res) {
  *
  * @param {IncomingMessage} proxyRes Response stream received
  * @param {Response} res Express response object
+ * @param {Function} resultSizeCallback Callback that runs when the response size is fully read
  */
-const watchResponseSize = function (proxyRes, res) {
+const watchResponseSize = function (proxyRes, res, resultSizeCallback) {
   let size = 0;
   proxyRes.on("data", (chunk) => {
     size += chunk.length;
@@ -68,6 +70,10 @@ const watchResponseSize = function (proxyRes, res) {
       proxyRes.destroy();
       sendResExceedsLimit(res);
     }
+  });
+
+  proxyRes.on("end", () => {
+    resultSizeCallback(size);
   });
 };
 
