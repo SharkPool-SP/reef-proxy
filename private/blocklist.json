@@ -18,7 +18,10 @@
   "https://gist.githubusercontent.com/",
   "https://api.github.com/",
   "https://translatorassets.kiok.jp/",
+  "https://cdn.jsdelivr.net/",
   "http://cdn.jsdelivr.net/",
+  "https://cdnjs.cloudflare.com",
+  "http://cdnjs.cloudflare.com",
   "https://cdn.prod.website-files.com/",
 
   "https://bitbucket.org/",
