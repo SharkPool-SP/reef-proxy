@@ -18,7 +18,7 @@ Our proxy also implements usage caps to maintain our service per client:
 
 - **Standard Requests**: 50 GET or POST requests per hour
 - **Scrape Endpoint**: 10 scraping requests per hour
-- **Payload Size Cap**: Requests larger than 30MB are automatically aborted
+- **Payload Size Cap**: Requests larger than 25MB are automatically aborted
 
 Please follow best practices when using our proxy. Cache responses when possible, check response headers before downloading resources, and avoid requesting unnecessarily large files. This helps reduce bandwidth and keeps the proxy available for everyone. :)
 
