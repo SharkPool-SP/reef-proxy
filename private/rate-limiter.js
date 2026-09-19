@@ -43,7 +43,9 @@ class RateLimiter {
         record.cnt = 1;
         record.exp = now + this.REQ_TIMEOUT;
       } else if (record.cnt >= this.MAX_REQUESTS) {
-        res.status(429).send("Rate Limit Exceeded. Please try again later.");
+        res.status(429).json({
+          error: "Rate Limit Exceeded. Please try again later.",
+        });
         return false;
       } else {
         record.cnt++;

@@ -200,7 +200,7 @@ const requestHandler = async function (req, res, next) {
   const isNotHeatFlagged = HeatMap.handleRequest(req, res, targetUrl.href);
   if (!isNotHeatFlagged) {
     res.status(429).json({
-      error: `Too many requests to this resource from your IP addresss. Please wait a while before trying again. Consider using our 'Transformation' API (refer to docs) to reduce the size of the resource.`,
+      error: `Too many requests to this resource from your IP address. Please wait a while before trying again. Consider using our 'Transformation' API (refer to docs) to reduce the size of the resource.`,
     });
     return;
   }
