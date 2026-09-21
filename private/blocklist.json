@@ -13,6 +13,8 @@
   "http://169.254.169.254/",
   "https://169.254.169.254/",
 
+  "https://reef-proxy.onrender.com/",
+
   "https://httpbin.org/",
   "https://raw.githubusercontent.com/",
   "https://gist.githubusercontent.com/",
