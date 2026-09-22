@@ -9,6 +9,10 @@
 const { DEBUG_MODE, MAX_CONTENT_LENGTH } = require("./constants.js");
 
 class HeatMap {
+  static get MIN_HEAT_MB() {
+    return 1 * 1024 * 1024; // 1 MB
+  }
+
   static init() {
     /** @type {Map<String, Map<String, Number> >} */
     HeatMap._heatedIPs = new Map();
@@ -60,10 +64,10 @@ class HeatMap {
       return false;
     }
 
-    // As of right now, we only flag requests larger than 1 MB
+    // As of right now, we only flag requests larger than MIN_HEAT_MB
     let isFlagged = false;
     let requestsLeft;
-    if (contentLength > MAX_CONTENT_LENGTH / 20) {
+    if (contentLength > HeatMap.MIN_HEAT_MB) {
       isFlagged = true;
 
       switch (true) {
@@ -77,7 +81,7 @@ class HeatMap {
           requestsLeft = 3;
           break;
         default:
-          requestsLeft = 10;
+          requestsLeft = 5;
       }
     }
 
