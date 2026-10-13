@@ -22,6 +22,7 @@ const PUBLIC_ROUTE = __dirname + "/public/";
 const {
   PORT,
   MAX_REQUESTS,
+  DEBUG_MODE,
   MAX_SCRAPES,
   REQUEST_TIMEOUT,
   CLEANUP_CYCLE,
@@ -58,7 +59,11 @@ setInterval(() => {
   if (memoryMetrics.heapUsed > MEMORY_THRESHOLD) {
     // Dont clear heat map/limiters. These are important for preventing abuse. Just clear the browser and cache.
     closeBrowser();
-    TargetCache.scheduledCleanup();
+
+    if (DEBUG_MODE) {
+      console.log("[!] Memory Cap. Cache count: " + TargetCache._cache.size);
+      TargetCache.scheduledCleanup();
+    }
   }
 }, MEMORY_CLEANUP_CYCLE);
 
