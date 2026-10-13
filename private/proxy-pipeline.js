@@ -1,6 +1,5 @@
 /* Module Imports */
 const zlib = require("zlib");
-const puppeteer = require("puppeteer");
 
 /* Local Imports */
 const blockedUrls = require("./blocklist.json");
@@ -8,6 +7,7 @@ const HeatMap = require("./heat-map.js");
 const TargetCache = require("./cacher.js");
 
 const { applyTransformation } = require("./transformer.js");
+const { newScrapePage } = require("./scrape-helper.js");
 const {
   validateTargetUrl,
   getTargetUrl,
@@ -47,8 +47,8 @@ const PROXY_OPTIONS = {
 
       const contentType = proxyRes.headers["content-type"] || "";
       const hasTransformation = Boolean(req.headers["x-transform"]);
-      const willDirectlyPipe = !hasTransformation &&
-        !(isOk && TargetCache.isCacheable(contentType));
+      const willDirectlyPipe =
+        !hasTransformation && !(isOk && TargetCache.isCacheable(contentType));
 
       watchResponseSize(proxyRes, res, (contentLength) => {
         if (willDirectlyPipe) {
@@ -134,15 +134,8 @@ const handleScrape = async (req, res) => {
   );
   const scrapeDelay = 1000 * Math.max(0, Math.min(10, waitTime));
 
-  let browser;
   try {
-    browser = await puppeteer.launch({
-      headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    });
-
-    const page = await browser.newPage();
-    await page.goto(targetUrl.href, { waitUntil: "networkidle2" });
+    const page = await newScrapePage(targetUrl.href);
     await new Promise((resolve) => setTimeout(resolve, scrapeDelay));
 
     const { type, content } = await applyTransformation(
@@ -151,7 +144,8 @@ const handleScrape = async (req, res) => {
       page,
       "text/html",
     );
-    await browser.close();
+
+    await page.close();
 
     const body = Buffer.from(content, "utf8");
     responseHandler(req, res, body, {
@@ -160,7 +154,6 @@ const handleScrape = async (req, res) => {
       targetUrl,
     });
   } catch (e) {
-    if (browser) await browser.close();
     res.status(500).json({ error: e.message || e });
   }
 };

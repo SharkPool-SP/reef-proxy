@@ -12,6 +12,7 @@ const {
   handleScrape,
   requestHandler,
 } = require("./private/proxy-pipeline.js");
+const { closeBrowser } = require("./private/scrape-helper.js");
 const RateLimiter = require("./private/rate-limiter.js");
 const HeatMap = require("./private/heat-map.js");
 const TargetCache = require("./private/cacher.js");
@@ -24,6 +25,8 @@ const {
   MAX_SCRAPES,
   REQUEST_TIMEOUT,
   CLEANUP_CYCLE,
+  MEMORY_CLEANUP_CYCLE,
+  MEMORY_THRESHOLD,
 } = require("./private/constants.js");
 
 // Caches & Limiters
@@ -34,6 +37,7 @@ TargetCache.init(REQUEST_TIMEOUT);
 
 // Automate cleanup for cached data.
 setInterval(() => {
+  closeBrowser();
   proxyLimiter.scheduledCleanup();
   scrapeLimiter.scheduledCleanup();
   HeatMap.scheduledCleanup();
@@ -46,6 +50,17 @@ const handleRequest = requestHandler.bind({
   scrapeLimiter,
   HeatMap,
 });
+
+// Clear up some memory when we reach a high memory usage threshold.
+setInterval(() => {
+  const memoryMetrics = process.memoryUsage();
+
+  if (memoryMetrics.heapUsed > MEMORY_THRESHOLD) {
+    // Dont clear heat map/limiters. These are important for preventing abuse. Just clear the browser and cache.
+    closeBrowser();
+    TargetCache.scheduledCleanup();
+  }
+}, MEMORY_CLEANUP_CYCLE);
 
 const app = express();
 
