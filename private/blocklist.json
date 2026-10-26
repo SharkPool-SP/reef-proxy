@@ -1,17 +1,6 @@
 [
   "http://localhost:",
   "https://localhost:",
-  "http://127.0.0.1:",
-  "https://127.0.0.1:",
-  "https://183.192.52.86",
-  "http://183.192.52.86",
-  "http://[::1]:",
-  "https://[::1]:",
-
-  "http://0.0.0.0:",
-  "https://0.0.0.0:",
-  "http://169.254.169.254/",
-  "https://169.254.169.254/",
 
   "https://reef-proxy.onrender.com/",
 
