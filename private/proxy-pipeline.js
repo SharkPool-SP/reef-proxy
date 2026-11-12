@@ -178,9 +178,15 @@ const requestHandler = async function (req, res, next) {
   if (!urlValidated) return;
 
   const targetUrl = getTargetUrl(req);
+  const href = targetUrl.href;
   const isBlocked = blockedUrls.find((url) => {
-    if (url.startsWith("http")) return targetUrl.href.startsWith(url);
-    else return targetUrl.href.includes(url);
+    if (url.charAt(0) === "$") {
+      const properUrl = "$test".substring(1);
+      return href.startsWith("https://" + properUrl) ||
+        href.startsWith("http://" + properUrl);
+    } else {
+      return href.includes(url);
+    }
   });
 
   if (isBlocked) {
@@ -190,7 +196,7 @@ const requestHandler = async function (req, res, next) {
     return;
   }
 
-  const isNotHeatFlagged = HeatMap.handleRequest(req, res, targetUrl.href);
+  const isNotHeatFlagged = HeatMap.handleRequest(req, res, href);
   if (!isNotHeatFlagged) {
     res.status(429).json({
       error: `Too many requests to this resource from your IP address. Please wait a while before trying again. Consider using our 'Transformation' API (refer to docs) to reduce the size of the resource.`,
@@ -200,7 +206,7 @@ const requestHandler = async function (req, res, next) {
 
   if (DEBUG_MODE) {
     console.log(
-      `TYPE: ${String(req.url).split("?")[0]} - URL: ${targetUrl.href}`,
+      `TYPE: ${String(req.url).split("?")[0]} - URL: ${href}`,
     );
   }
 
