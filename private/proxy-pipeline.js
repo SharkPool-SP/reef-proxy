@@ -181,7 +181,7 @@ const requestHandler = async function (req, res, next) {
   const href = targetUrl.href;
   const isBlocked = blockedUrls.find((url) => {
     if (url.charAt(0) === "$") {
-      const properUrl = "$test".substring(1);
+      const properUrl = url.substring(1);
       return href.startsWith("https://" + properUrl) ||
         href.startsWith("http://" + properUrl);
     } else {
