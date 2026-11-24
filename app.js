@@ -68,6 +68,7 @@ setInterval(() => {
 }, MEMORY_CLEANUP_CYCLE);
 
 const app = express();
+app.set("trust proxy", 1);
 
 /* Route Setup */
 app.use("/get", express.json());
