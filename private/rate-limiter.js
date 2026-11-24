@@ -1,5 +1,3 @@
-const { DEBUG_MODE } = require("./constants.js");
-
 /**
  * RateLimiter limits the number of requests a user can make from their IP address.
  */
@@ -35,10 +33,6 @@ class RateLimiter {
 
     const now = Date.now();
     const record = this._limiter.get(key);
-
-    if (DEBUG_MODE) {
-      console.log(`REQ FROM IP: ${ipIdentifier} BLOCKED: ${record ? record.cnt >= this.MAX_REQUESTS : false}`)
-    }
 
     if (record === undefined) {
       this._limiter.set(key, {
