@@ -34,11 +34,15 @@ const PROXY_OPTIONS = {
     return url.pathname + url.search;
   },
   changeOrigin: true,
+  followRedirects: true,
   logLevel: "warn",
   selfHandleResponse: true,
   on: {
     proxyReq(proxyReq, req) {
       cleanupHeaders(proxyReq);
+
+      proxyReq.removeHeader("origin");
+      proxyReq.setHeader("referer", getTargetUrl(req).origin + "/");
     },
     async proxyRes(proxyRes, req, res) {
       removeExtraHeaders(proxyRes);
@@ -179,11 +183,14 @@ const requestHandler = async function (req, res, next) {
 
   const targetUrl = getTargetUrl(req);
   const href = targetUrl.href;
+
   const isBlocked = blockedUrls.find((url) => {
     if (url.charAt(0) === "$") {
       const properUrl = url.substring(1);
-      return href.startsWith("https://" + properUrl) ||
-        href.startsWith("http://" + properUrl);
+      return (
+        href.startsWith("https://" + properUrl) ||
+        href.startsWith("http://" + properUrl)
+      );
     } else {
       return href.includes(url);
     }
@@ -205,9 +212,7 @@ const requestHandler = async function (req, res, next) {
   }
 
   if (DEBUG_MODE) {
-    console.log(
-      `TYPE: ${String(req.url).split("?")[0]} - URL: ${href}`,
-    );
+    console.log(`TYPE: ${String(req.url).split("?")[0]} - URL: ${href}`);
   }
 
   if (req.method === "HEAD") {

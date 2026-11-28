@@ -134,12 +134,12 @@ const routeDocs = (_, res) => res.sendFile(PUBLIC_ROUTE + "pages/docs.html");
 app.get("/", routeDocs);
 app.get("/help", routeDocs);
 
-app.get("/wakeup-service", (req, res) => {
+app.get("/wakeup-service", (_, res) => {
   res.status(200);
   res.send("");
 });
 
-app.use((req, res) => {
+app.use((_, res) => {
   res.status(404);
   res.send(
     `Invalid route! Documentation is availiable here: <a href="/help">'/help'</a>`,

@@ -19,10 +19,11 @@ x-transform: {
 
 The `/get` & `/post` endpoints currently supports the following transformations:
 
-| Transformation   | Arguments      | Description                                                                |
-| ---------------- | -------------- | -------------------------------------------------------------------------- |
-| `substring`      | `[start, end]` | Returns a portion of the response between the specified character indexes. |
-| `indexed_string` | `[start, end]` | Finds two strings and returns the content between their indexes.           |
+| Transformation   | Arguments               | Description                                                                |
+| ---------------- | ----------------------- | -------------------------------------------------------------------------- |
+| `substring`      | `[start, end]`          | Returns a portion of the response between the specified character indexes. |
+| `indexed_string` | `[start, end]`          | Finds two strings and returns the content between their indexes.           |
+| `json`           | `[...indexes, ...keys]` | Extracts specified keys and indexes from json.                             |
 
 ### `substring`
 
@@ -76,6 +77,76 @@ Using `args: ["Hello,", "long"]` returns:
 
 ```text
 this is a very
+```
+
+### `json`
+
+Extracts specified properties and indexes from a JSON object or array. Supports nested property access.
+
+```http
+x-transform: {
+  "type": "json",
+  "args": ["key1", "key2", 0, 5]
+}
+```
+
+**Object example**
+
+Given the following response:
+
+```json
+{
+  "name": "Jane Doe",
+  "age": 35,
+  "sex": "F"
+}
+```
+
+Using `args: ["name", "sex"]` returns:
+
+```json
+{
+  "name": "Jane Doe",
+  "sex": "F"
+}
+```
+
+**Array example**
+
+Given:
+
+```json
+["a", "b", "c", "d"]
+```
+
+Using `args: [0, 2]` returns:
+
+```json
+["a", "c"]
+```
+
+**Nested property example**
+
+Nested properties can be extracted by passing an array containing the property path.
+
+Given:
+
+```json
+{
+  "name": "Jane Doe",
+  "stats": {
+    "wins": 50,
+    "losses": 10
+  }
+}
+```
+
+Using `args: [["stats", "wins"]]` returns:
+
+```json
+{
+  "stats.wins": 50
+}
 ```
 
 ## Scrape transformations
