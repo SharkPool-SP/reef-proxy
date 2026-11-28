@@ -1,6 +1,6 @@
 {
   "name": "Reef Proxy",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "main": "app.js",
   "scripts": {
@@ -18,5 +18,8 @@
     "express": "^5.2.1",
     "http-proxy-middleware": "^4.1.1",
     "puppeteer": "^25.2.1"
+  },
+  "allowScripts": {
+    "puppeteer@25.19.0": true
   }
 }

@@ -19,6 +19,7 @@ class TargetCache {
     "text/xml",
     "application/xml",
   ];
+
   static CACHE_TIMEOUT = 0;
 
   /** @type {Map<String, { exp: Number, status: Number, contentType: String, data: any }>} */

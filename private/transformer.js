@@ -5,6 +5,19 @@
  * We currently only support applying transformations on text-like content.
  */
 
+/**
+ * @example
+ * Sample transformation request header format:
+ * {
+ *    type: "substring",
+ *    args: [0, 100]
+ * }
+ */
+
+const { substring, indexedString } = require("./transformers/strings.js");
+const { jsonGet } = require("./transformers/json.js");
+const { query, queryAll } = require("./transformers/queries.js");
+
 const TRANSFORMABLE_TYPES = new Set([
   "application/javascript",
   "application/x-javascript",
@@ -21,75 +34,67 @@ const TRANSFORMABLE_TYPES = new Set([
 ]);
 
 /**
+ * Enum for Transform types.
+ * @readonly
+ * @enum {String}
+ */
+const Transform = Object.freeze({
+  SUBSTRING: "substring",
+  INDEXED_STRING: "indexed_string",
+  JSON: "json",
+  QUERY: "query",
+  QUERY_ALL: "query_all",
+});
+
+/**
+ * Allowed transformations for each type of request.
+ * @readonly
+ * @enum {Array<String>}
+ */
+// prettier-ignore
+const ALLOWED_TRANSFORMS = Object.freeze({
+  proxy: [
+    Transform.SUBSTRING,
+    Transform.INDEXED_STRING,
+    Transform.JSON,
+  ],
+  scrape: [
+    Transform.QUERY,
+    Transform.QUERY_ALL,
+  ],
+});
+
+/**
  * All supported transformations and their handlers.
+ *
+ * @param {Array} args Arguments for the transformation
+ * @param {*} content The content to transform
  */
 const TRANSFORMATIONS = {
-  /* Returns a portion of text using a specified start and end point */
-  substring: (args, content) => {
-    const string = content.toString();
-    const start = Math.max(0, args[0] ?? 0);
-    const end = Math.min(string.length, args[1] ?? string.length);
+  /**
+   * @returns {Object} A portion of text using a specified start and end point
+   */
+  [Transform.SUBSTRING]: substring,
 
-    return {
-      type: "text/plain",
-      content: Buffer.from(string.substring(start, end)),
-    };
-  },
-  /* Returns a portion of text using a specified start and end point */
-  indexed_string: (args, content) => {
-    const string = content.toString();
-    const start = Math.max(0, string.indexOf(args[0])) + String(args[0]).length;
-    let end = string.indexOf(args[1], start);
-    if (end === -1) end = string.length;
+  /**
+   * @returns {Object} A portion of text using a specified start and end string
+   */
+  [Transform.INDEXED_STRING]: indexedString,
 
-    return {
-      type: "text/plain",
-      content: Buffer.from(string.substring(start, end)),
-    };
-  },
-  /* These are for our "scrape" endpoint, working directly with Puppeteer. */
-  /** Query select a matching element */
-  query: async (args, content) => {
-    try {
-      const element = await content.$eval(
-        String(args[0]),
-        (element) => element.outerHTML,
-      );
+  /**
+   * @returns {Object} An object containing requested key-value pairs.
+   */
+  [Transform.JSON]: jsonGet,
 
-      return {
-        type: "text/html",
-        content: element,
-      };
-    } catch {
-      return {
-        type: "text/html",
-        content: "",
-      };
-    }
-  },
-  /** Query select all matching elements */
-  query_all: async (args, content) => {
-    try {
-      const elements = await content.$$eval(String(args[0]), (elements) =>
-        elements.map((e) => e.outerHTML),
-      );
+  /**
+   * @returns {Object} A query-selected html element.
+   */
+  [Transform.QUERY]: query,
 
-      return {
-        type: "application/json",
-        content: JSON.stringify(elements),
-      };
-    } catch {
-      return {
-        type: "application/json",
-        content: "[]",
-      };
-    }
-  },
-};
-
-const ALLOWED_TRANSFORMS = {
-  proxy: ["substring", "indexed_string"],
-  scrape: ["query", "query_all"],
+  /**
+   * @returns {Object} An array of query-selected html elements.
+   */
+  [Transform.QUERY_ALL]: queryAll,
 };
 
 /**
@@ -105,14 +110,6 @@ const _isContentTransformable = function (contentType) {
   if (type.startsWith("text/")) return true;
   return TRANSFORMABLE_TYPES.has(type);
 };
-
-/**
- * Sample transformation request header format:
- * {
- *    type: "substring",
- *    args: [0, 100]
- * }
- */
 
 /**
  * Decodes the transformation data in a request.
@@ -178,6 +175,7 @@ const applyTransformation = async function (type, req, content, contentType) {
 
     if (ALLOWED_TRANSFORMS[type].includes(command)) {
       const transformed = await TRANSFORMATIONS[command](data.args, content);
+
       return {
         type: transformed.type ?? contentType,
         content: transformed.content,
